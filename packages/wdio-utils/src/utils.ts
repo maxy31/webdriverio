@@ -27,9 +27,9 @@ export function isAbsolute(p: string) {
  * overwrite native element commands with user defined
  * @param {object} propertiesObject propertiesObject
  */
-export function overwriteElementCommands(propertiesObject: { '__elementOverrides__'?: { value: Record<string, unknown> }, [key: string]: unknown }) {
-    const elementOverrides = propertiesObject.__elementOverrides__
-        ? propertiesObject.__elementOverrides__.value
+export function overwriteElementCommands(propertiesObject: { '_elementOverrides_'?: { value: Record<string, unknown> }, [key: string]: unknown }) {
+    const elementOverrides = propertiesObject._elementOverrides_
+        ? propertiesObject._elementOverrides_.value
         : {}
 
     for (const [commandName, userDefinedCommand] of Object.entries(elementOverrides)) {
@@ -53,7 +53,7 @@ export function overwriteElementCommands(propertiesObject: { '__elementOverrides
             const element = this
             return userDefinedCommand.apply(element, [
                 function origCommandFunction (this: WebdriverIO.Browser, ..._args: unknown[]) {
-                    const context = this || element // respect explicite context binding, use element as default
+                    const context = this || element // respect explicit context binding, use element as default
                     // eslint-disable-next-line prefer-rest-params
                     return origCommand.apply(context, arguments)
                 },
@@ -67,8 +67,8 @@ export function overwriteElementCommands(propertiesObject: { '__elementOverrides
         }
     }
 
-    delete propertiesObject.__elementOverrides__
-    propertiesObject.__elementOverrides__ = { value: {} }
+    delete propertiesObject._elementOverrides_
+    propertiesObject._elementOverrides_ = { value: {} }
 }
 
 /**
@@ -81,14 +81,14 @@ export function commandCallStructure (commandName: string, args: unknown[], unfu
             typeof arg === 'string' &&
             /**
              * The regex pattern matches:
-             *  - Regular functions: `function()` or `function foo()`
-             *  - Async functions: `async function()` or `async function foo()`
-             *  - IIFEs: `!function()`
-             *  - Returned functions: `return function` or `return (function`
-             *  - Returned async functions: `return async function` or `return (async function`
-             *  - Arrow functions: `() =>` or `param =>` or `(param1, param2) =>`
+             *  - Regular functions: function() or function foo()
+             *  - Async functions: async function() or async function foo()
+             *  - IIFEs: !function()
+             *  - Returned functions: return function or return (function
+             *  - Returned async functions: return async function or return (async function
+             *  - Arrow functions: () => or param => or (param1, param2) =>
              */
-            /^\s*(?:(?:async\s+)?function(?:\s+\w+)?\s*\(|!function\(|return\s+\(?(?:async\s+)?function|\([^)]*\)\s*=>|\w+\s*=>)/.test(arg.trim())
+            /^\s*(?:(?:async\s+)?function(?:\s+\w+)?\s*\(|!function\(|return\s+\(?(?:async\s+)?function|\([^)]\)\s=>|\w+\s*=>)/.test(arg.trim())
         ) {
             arg = '<fn>'
         } else if (
@@ -109,7 +109,7 @@ export function commandCallStructure (commandName: string, args: unknown[], unfu
         ) {
             arg = SCREENSHOT_REPLACEMENT
         } else if (typeof arg === 'string') {
-            arg = `"${arg}"`
+            arg = '${arg}'
         } else if (typeof arg === 'function') {
             arg = '<fn>'
         } else if (arg === null) {
@@ -142,7 +142,7 @@ export function transformCommandLogResult (result: unknown) {
         return SCRIPT_PLACEHOLDER
     } else if ('script' in result && typeof result.script === 'string' && result.script.match(REGEX_SCRIPT_NAME)) {
         const newScript = result.script.match(REGEX_SCRIPT_NAME)![2]
-        return { ...result, script: `${newScript}(...) [${Buffer.byteLength(result.script, 'utf-8')} bytes]` }
+        return { ...result, script: `${newScript}(...) [${Buffer.byteLength(result.script, 'utf-8')} bytes] ` }
     } else if ('script' in result && typeof result.script === 'string' && result.script.startsWith('!function(')) {
         return { ...result, script: `<minified function> [${Buffer.byteLength(result.script, 'utf-8')} bytes]` }
     }
@@ -154,7 +154,7 @@ export function transformCommandLogResult (result: unknown) {
  * checks if command argument is valid according to specification
  *
  * @param  {*}       arg           command argument
- * @param  {Object}  expectedType  parameter type (e.g. `number`, `string[]` or `(number|string)`)
+ * @param  {Object}  expectedType  parameter type (e.g. number, string[] or (number|string))
  * @return {Boolean}               true if argument is valid
  */
 export function isValidParameter (arg: unknown, expectedType: string) {
@@ -298,7 +298,7 @@ export function isFunctionAsync (fn: Function) {
 
 /**
  * filter out arguments passed to specFn & hookFn, don't allow callbacks
- * as there is no need for user to call e.g. `done()`
+ * as there is no need for user to call e.g. done()
  */
 export function filterSpecArgs (args: unknown[]) {
     return args.filter((arg) => typeof arg !== 'function')
@@ -307,7 +307,7 @@ export function filterSpecArgs (args: unknown[]) {
 /**
  * checks if provided string is Base64
  * @param {string} str string to check
- * @return {boolean} `true` if the provided string is Base64
+ * @return {boolean} true if the provided string is Base64
  */
 export function isBase64(str: string) {
     if (typeof str !== 'string') {
@@ -365,7 +365,7 @@ export function isAppiumCapability(caps: WebdriverIO.Capabilities): boolean {
  * which is:
  *   - whenever the user has set connection options that differ
  *     from the default, or a port is set
- *   - whenever the user defines `user` and `key` which later will
+ *   - whenever the user defines user and key which later will
  *     update the connection options
  */
 export function definesRemoteDriver(options: Pick<Options.WebDriver, 'user' | 'key' | 'protocol' | 'hostname' | 'port' | 'path'>) {
