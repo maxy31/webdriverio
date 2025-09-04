@@ -1,2 +1,2 @@
 import { vi } from 'vitest'
-export default vi.fn()
+export default vi.fn()   
