@@ -1,0 +1,186 @@
+{
+  "project": "WebdriverIO",
+  "timestamp": "2025-09-05T11:45:55.427Z",
+  "status": "FAILURE",
+  "executionTime": "2.028 seconds",
+  "summary": {
+    "totalTests": 17,
+    "passed": 13,
+    "failed": 2,
+    "skipped": 2,
+    "passRate": "76.47%",
+    "testDuration": "1.65 seconds"
+  },
+  "coverage": {
+    "statements": 78.5,
+    "branches": 72.3,
+    "functions": 85.2,
+    "lines": 79.8,
+    "files": [
+      {
+        "file": "src/webdriver.js",
+        "statements": 89.2,
+        "branches": 82.1,
+        "functions": 91.3,
+        "lines": 88.7
+      },
+      {
+        "file": "src/element.js",
+        "statements": 76.4,
+        "branches": 69.8,
+        "functions": 82.1,
+        "lines": 77.3
+      },
+      {
+        "file": "src/browser.js",
+        "statements": 81.2,
+        "branches": 74.5,
+        "functions": 87.6,
+        "lines": 82.1
+      },
+      {
+        "file": "src/utils.js",
+        "statements": 68.9,
+        "branches": 61.2,
+        "functions": 78.4,
+        "lines": 70.2
+      }
+    ]
+  },
+  "testSuites": [
+    {
+      "name": "Unit Tests - Core Functionality",
+      "passed": 4,
+      "failed": 1,
+      "skipped": 0,
+      "total": 5,
+      "duration": 326,
+      "tests": [
+        {
+          "name": "WebDriver initialization",
+          "status": "passed",
+          "duration": 45
+        },
+        {
+          "name": "Element selection methods",
+          "status": "passed",
+          "duration": 23
+        },
+        {
+          "name": "Browser navigation",
+          "status": "passed",
+          "duration": 67
+        },
+        {
+          "name": "Wait conditions",
+          "status": "passed",
+          "duration": 89
+        },
+        {
+          "name": "Action chains",
+          "status": "failed",
+          "duration": 102,
+          "error": "Timeout waiting for element"
+        }
+      ]
+    },
+    {
+      "name": "Unit Tests - Protocol Implementation",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 1,
+      "total": 4,
+      "duration": 118,
+      "tests": [
+        {
+          "name": "WebDriver protocol commands",
+          "status": "passed",
+          "duration": 34
+        },
+        {
+          "name": "JSON Wire protocol",
+          "status": "passed",
+          "duration": 28
+        },
+        {
+          "name": "Chrome DevTools protocol",
+          "status": "passed",
+          "duration": 56
+        },
+        {
+          "name": "Selenium Grid communication",
+          "status": "skipped",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "name": "Integration Tests - Browser Automation",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 1,
+      "total": 4,
+      "duration": 888,
+      "tests": [
+        {
+          "name": "Chrome browser automation",
+          "status": "passed",
+          "duration": 234
+        },
+        {
+          "name": "Firefox browser automation",
+          "status": "passed",
+          "duration": 198
+        },
+        {
+          "name": "Safari browser automation",
+          "status": "skipped",
+          "duration": 0
+        },
+        {
+          "name": "Multi-browser parallel execution",
+          "status": "passed",
+          "duration": 456
+        }
+      ]
+    },
+    {
+      "name": "Integration Tests - Framework Features",
+      "passed": 3,
+      "failed": 1,
+      "skipped": 0,
+      "total": 4,
+      "duration": 313,
+      "tests": [
+        {
+          "name": "Page Object Model implementation",
+          "status": "passed",
+          "duration": 78
+        },
+        {
+          "name": "Custom commands",
+          "status": "passed",
+          "duration": 45
+        },
+        {
+          "name": "Reporter plugins",
+          "status": "passed",
+          "duration": 67
+        },
+        {
+          "name": "Service integrations",
+          "status": "failed",
+          "duration": 123,
+          "error": "Service connection failed"
+        }
+      ]
+    }
+  ],
+  "environment": {
+    "nodeVersion": "v18.20.8",
+    "platform": "win32",
+    "testFramework": "Mocha/Jest (simulated)",
+    "cpus": 16,
+    "memory": "32GB"
+  }
+}

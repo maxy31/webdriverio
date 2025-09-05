@@ -1,0 +1,113 @@
+# docker-compose.yml
+# Docker Compose configuration for WebdriverIO deployment
+
+version: '3.8'
+
+services:
+  # WebdriverIO application service
+  webdriverio-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webdriverio-app
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - TEST_TIMEOUT=60000
+    volumes:
+      - ./test-reports:/app/test-reports
+      - ./logs:/app/logs
+    networks:
+      - webdriverio-network
+    restart: unless-stopped
+    depends_on:
+      - selenium-hub
+      - chrome
+      - firefox
+
+  # Selenium Hub for test execution
+  selenium-hub:
+    image: selenium/hub:4.15.0
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+      - "4443:4443"
+      - "4442:4442"
+    environment:
+      - GRID_MAX_SESSION=5
+      - GRID_BROWSER_TIMEOUT=300
+      - GRID_TIMEOUT=300
+      - SE_SESSION_REQUEST_TIMEOUT=300
+      - SE_SESSION_RETRY_INTERVAL=2
+    networks:
+      - webdriverio-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/ui"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Chrome browser node
+  chrome:
+    image: selenium/node-chrome:4.15.0
+    container_name: chrome-node
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+      - SE_NODE_SESSION_TIMEOUT=300
+    networks:
+      - webdriverio-network
+    volumes:
+      - /dev/shm:/dev/shm
+
+  # Firefox browser node
+  firefox:
+    image: selenium/node-firefox:4.15.0
+    container_name: firefox-node
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+      - SE_NODE_SESSION_TIMEOUT=300
+    networks:
+      - webdriverio-network
+    volumes:
+      - /dev/shm:/dev/shm
+
+  # Optional: Database for storing test results
+  postgres:
+    image: postgres:15-alpine
+    container_name: webdriverio-db
+    environment:
+      - POSTGRES_USER=webdriverio
+      - POSTGRES_PASSWORD=testpass123
+      - POSTGRES_DB=test_results
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - webdriverio-network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webdriverio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  webdriverio-network:
+    driver: bridge
+    name: webdriverio-network
+
+volumes:
+  postgres-data:
+    driver: local

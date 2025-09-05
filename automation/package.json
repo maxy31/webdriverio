@@ -1,0 +1,21 @@
+{
+  "name": "webdriverio",
+  "version": "1.0.0",
+  "main": "automation-runner.js",
+  "scripts": {
+    "build": "node build-automation.js",
+    "test": "node test-automation.js",
+    "start": "node automation-runner.js",
+    "all": "npm run build && npm run test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "chai": "^6.0.1",
+    "eslint": "^9.34.0",
+    "mocha": "^11.7.2",
+    "nyc": "^17.1.0"
+  }
+}

@@ -1,0 +1,449 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Report - WebdriverIO</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 2em; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; margin-top: 10px; font-weight: bold; }
+        .status-success { background: #10b981; }
+        .status-failure { background: #ef4444; }
+        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .metrics { display: flex; flex-wrap: wrap; gap: 20px; margin: 20px 0; }
+        .metric { flex: 1; min-width: 150px; text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px; }
+        .metric-value { font-size: 2.5em; font-weight: bold; }
+        .metric-label { color: #6b7280; margin-top: 5px; }
+        .passed { color: #10b981; }
+        .failed { color: #ef4444; }
+        .skipped { color: #f59e0b; }
+        .coverage-bar { width: 100%; height: 30px; background: #e5e7eb; border-radius: 15px; overflow: hidden; position: relative; margin: 10px 0; }
+        .coverage-fill { height: 100%; background: linear-gradient(90deg, #10b981 0%, #34d399 100%); transition: width 0.3s ease; }
+        .coverage-text { position: absolute; width: 100%; text-align: center; line-height: 30px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f3f4f6; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; }
+        td { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        .test-result { padding: 2px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold; }
+        .test-passed { background: #d1fae5; color: #065f46; }
+        .test-failed { background: #fee2e2; color: #991b1b; }
+        .test-skipped { background: #fed7aa; color: #92400e; }
+        .suite-header { background: #f9fafb; font-weight: bold; }
+        .footer { text-align: center; color: #6b7280; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Test Execution Report</h1>
+            <div>Project: WebdriverIO</div>
+            <div class="status-badge status-failure">
+                ⚠️ Some Tests Failed
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Test Summary</h2>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-value">17</div>
+                    <div class="metric-label">Total Tests</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value passed">13</div>
+                    <div class="metric-label">Passed</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value failed">2</div>
+                    <div class="metric-label">Failed</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value skipped">2</div>
+                    <div class="metric-label">Skipped</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">76.47%</div>
+                    <div class="metric-label">Pass Rate</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Code Coverage</h2>
+            <div>
+                <div style="margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Statement Coverage</span>
+                        <span style="font-weight: bold;">78.5%</span>
+                    </div>
+                    <div class="coverage-bar">
+                        <div class="coverage-fill" style="width: 78.5%;"></div>
+                    </div>
+                </div>
+                <div style="margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Branch Coverage</span>
+                        <span style="font-weight: bold;">72.3%</span>
+                    </div>
+                    <div class="coverage-bar">
+                        <div class="coverage-fill" style="width: 72.3%;"></div>
+                    </div>
+                </div>
+                <div style="margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Function Coverage</span>
+                        <span style="font-weight: bold;">85.2%</span>
+                    </div>
+                    <div class="coverage-bar">
+                        <div class="coverage-fill" style="width: 85.2%;"></div>
+                    </div>
+                </div>
+                <div style="margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Line Coverage</span>
+                        <span style="font-weight: bold;">79.8%</span>
+                    </div>
+                    <div class="coverage-bar">
+                        <div class="coverage-fill" style="width: 79.8%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Test Suite Results</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test Suite</th>
+                        <th>Total</th>
+                        <th>Passed</th>
+                        <th>Failed</th>
+                        <th>Skipped</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr class="suite-header">
+                            <td>Unit Tests - Core Functionality</td>
+                            <td>5</td>
+                            <td><span class="test-result test-passed">4</span></td>
+                            <td><span class="test-result test-failed">1</span></td>
+                            <td><span class="test-result test-skipped">0</span></td>
+                            <td>326ms</td>
+                        </tr>
+                    
+                        <tr class="suite-header">
+                            <td>Unit Tests - Protocol Implementation</td>
+                            <td>4</td>
+                            <td><span class="test-result test-passed">3</span></td>
+                            <td><span class="test-result test-failed">0</span></td>
+                            <td><span class="test-result test-skipped">1</span></td>
+                            <td>118ms</td>
+                        </tr>
+                    
+                        <tr class="suite-header">
+                            <td>Integration Tests - Browser Automation</td>
+                            <td>4</td>
+                            <td><span class="test-result test-passed">3</span></td>
+                            <td><span class="test-result test-failed">0</span></td>
+                            <td><span class="test-result test-skipped">1</span></td>
+                            <td>888ms</td>
+                        </tr>
+                    
+                        <tr class="suite-header">
+                            <td>Integration Tests - Framework Features</td>
+                            <td>4</td>
+                            <td><span class="test-result test-passed">3</span></td>
+                            <td><span class="test-result test-failed">1</span></td>
+                            <td><span class="test-result test-skipped">0</span></td>
+                            <td>313ms</td>
+                        </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2>Test Details</h2>
+            
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #4f46e5; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Unit Tests - Core Functionality</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                                <tr>
+                                    <td>WebDriver initialization</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>45ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Element selection methods</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>23ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Browser navigation</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>67ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Wait conditions</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>89ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Action chains</td>
+                                    <td>
+                                        <span class="test-result test-failed">
+                                            FAILED
+                                        </span>
+                                    </td>
+                                    <td>102ms</td>
+                                    <td>Timeout waiting for element</td>
+                                </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #4f46e5; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Unit Tests - Protocol Implementation</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                                <tr>
+                                    <td>WebDriver protocol commands</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>34ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>JSON Wire protocol</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>28ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Chrome DevTools protocol</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>56ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Selenium Grid communication</td>
+                                    <td>
+                                        <span class="test-result test-skipped">
+                                            SKIPPED
+                                        </span>
+                                    </td>
+                                    <td>0ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #4f46e5; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Integration Tests - Browser Automation</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                                <tr>
+                                    <td>Chrome browser automation</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>234ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Firefox browser automation</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>198ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Safari browser automation</td>
+                                    <td>
+                                        <span class="test-result test-skipped">
+                                            SKIPPED
+                                        </span>
+                                    </td>
+                                    <td>0ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Multi-browser parallel execution</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>456ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #4f46e5; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Integration Tests - Framework Features</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                                <tr>
+                                    <td>Page Object Model implementation</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>78ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Custom commands</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>45ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Reporter plugins</td>
+                                    <td>
+                                        <span class="test-result test-passed">
+                                            PASSED
+                                        </span>
+                                    </td>
+                                    <td>67ms</td>
+                                    <td>-</td>
+                                </tr>
+                            
+                                <tr>
+                                    <td>Service integrations</td>
+                                    <td>
+                                        <span class="test-result test-failed">
+                                            FAILED
+                                        </span>
+                                    </td>
+                                    <td>123ms</td>
+                                    <td>Service connection failed</td>
+                                </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            
+        </div>
+        
+        <div class="card">
+            <h2>Environment Information</h2>
+            <table>
+                <tbody>
+                    <tr><td><strong>Node Version</strong></td><td>v18.20.8</td></tr>
+                    <tr><td><strong>Platform</strong></td><td>win32</td></tr>
+                    <tr><td><strong>Test Framework</strong></td><td>Mocha/Jest (simulated)</td></tr>
+                    <tr><td><strong>CPU Cores</strong></td><td>16</td></tr>
+                    <tr><td><strong>Total Memory</strong></td><td>32GB</td></tr>
+                    <tr><td><strong>Execution Time</strong></td><td>2.028 seconds</td></tr>
+                    <tr><td><strong>Timestamp</strong></td><td>05/09/2025, 7:45:55 pm</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            Generated on 05/09/2025, 7:45:55 pm | WebdriverIO Test Automation
+        </div>
+    </div>
+</body>
+</html>

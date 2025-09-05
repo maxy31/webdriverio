@@ -1,0 +1,40 @@
+{
+  "project": "WebdriverIO",
+  "status": "SUCCESS",
+  "timestamp": "2025-09-05T11:45:34.659Z",
+  "buildTime": "0.007 seconds",
+  "environment": {
+    "nodeVersion": "v18.20.8",
+    "npmVersion": "N/A",
+    "platform": "win32",
+    "arch": "x64",
+    "cpus": 16
+  },
+  "steps": [
+    "Previous builds cleaned",
+    "Environment checked (Node v18.20.8)",
+    "Build directories created",
+    "Source code compiled (4 modules)",
+    "Build validation passed",
+    "Build artifacts created",
+    "Application packaged as webdriverio-build-1757072734658.tar.gz"
+  ],
+  "artifacts": [
+    {
+      "name": "manifest.json",
+      "path": "dist\\manifest.json",
+      "size": 159
+    },
+    {
+      "name": "webdriverio-build-1757072734658.tar.gz",
+      "path": "dist\\webdriverio-build-1757072734658.tar.gz",
+      "size": 34
+    }
+  ],
+  "summary": {
+    "totalSteps": 7,
+    "successfulSteps": 7,
+    "failedSteps": 0,
+    "warnings": 0
+  }
+}
