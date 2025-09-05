@@ -5,9 +5,9 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main, ManHou, feature/* ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, ManHou ]
 
 env:
   NODE_VERSION: '18'

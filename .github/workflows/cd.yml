@@ -8,7 +8,7 @@ on:
     workflows: ["Continuous Integration"]
     types:
       - completed
-    branches: [main, develop]
+    branches: [main, ManHou]
   workflow_dispatch:
     inputs:
       environment:
