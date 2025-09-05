@@ -1,48 +1,48 @@
-name: Continuous Deployment
-
+name: CD
 on:
-  push:
-    branches: [ main, ManHou ]
+  push: { branches: [ main, ManHou ] }
   workflow_dispatch:
     inputs:
       environment:
-        description: Target environment
-        required: true
-        default: staging
         type: choice
+        default: staging
         options: [ staging, production ]
+        description: Target environment
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Show Docker version
+      - name: Setup Node (for any node-based scripts)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            **/package-lock.json
+
+      - name: Ensure Docker Compose v2 is available
         run: |
-          docker --version
-          docker compose version || true
+          if ! docker compose version >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y docker-compose-plugin
+          fi
+          docker compose version
 
       - name: Make deploy script executable
         run: chmod +x automation/deploy.sh
 
-      # If deploy.sh uses "docker-compose", the runner might not have v1.
-      # Prefer "docker compose" inside the script. Otherwise install docker-compose v1
-      # or adapt deploy.sh to pick whichever is available.
-
       - name: Run deployment
         env:
-          # default to 'staging' when triggered by push (no inputs)
           TARGET_ENV: ${{ inputs.environment || 'staging' }}
         run: |
           cd automation
           ./deploy.sh "$TARGET_ENV"
 
-      - name: Upload deployment report & logs
+      - name: Upload deployment artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -52,5 +52,5 @@ jobs:
           path: |
             automation/deployment-report-*.json
             automation/deploy_*.log
-            deployment-report-*.json
-            deploy_*.log
+            test-reports/**
+            build-reports/**
