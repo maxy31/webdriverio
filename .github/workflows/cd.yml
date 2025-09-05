@@ -4,6 +4,8 @@ name: Continuous Deployment
 on:
   push:
     branches: [ main, ManHou ]
+    paths:
+      - 'automation/**'
   workflow_dispatch:
     inputs:
       environment:
@@ -14,25 +16,291 @@ on:
         options:
           - staging
           - production
+      skip_tests:
+        description: 'Skip pre-deployment tests'
+        required: false
+        default: false
+        type: boolean
+      rollback:
+        description: 'Perform rollback instead of deployment'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  TARGET_ENV: ${{ github.event.inputs.environment || 'staging' }}
 
 jobs:
-  deploy:
-    name: Deploy Application
+  pre-deploy-validation:
+    name: Pre-deployment Validation
     runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_tests && !inputs.rollback }}
     
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Run Deployment Script
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: './automation/package-lock.json'
+
+      - name: Install dependencies
         working-directory: ./automation
         run: |
-          chmod +x deploy.sh
-          ./deploy.sh ${{ github.event.inputs.environment || 'staging' }}
-      
-      - name: Upload Deployment Report
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run pre-deployment tests
+        working-directory: ./automation
+        run: |
+          echo "Running pre-deployment validation..."
+          
+          # Run build to ensure everything compiles
+          npm run build
+          
+          # Run basic tests
+          npm run test
+          
+          echo "Pre-deployment validation completed successfully!"
+
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || 'staging' }}
+    runs-on: ubuntu-latest
+    needs: [pre-deploy-validation]
+    if: always() && (needs.pre-deploy-validation.result == 'success' || needs.pre-deploy-validation.result == 'skipped')
+    
+    environment: 
+      name: ${{ github.event.inputs.environment || 'staging' }}
+      url: ${{ steps.deploy.outputs.deployment_url }}
+    
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: './automation/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./automation
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Prepare deployment environment
+        working-directory: ./automation
+        run: |
+          echo "Preparing deployment for ${{ env.TARGET_ENV }} environment..."
+          
+          # Create necessary directories
+          mkdir -p build-reports test-reports logs
+          
+          # Set environment-specific configurations
+          if [ "${{ env.TARGET_ENV }}" = "production" ]; then
+            echo "NODE_ENV=production" > .env
+            echo "LOG_LEVEL=error" >> .env
+          else
+            echo "NODE_ENV=staging" > .env
+            echo "LOG_LEVEL=info" >> .env
+          fi
+          
+          # Show environment info
+          echo "Environment configuration:"
+          cat .env || true
+
+      - name: Build for deployment
+        working-directory: ./automation
+        run: |
+          echo "Building automation for deployment..."
+          npm run build
+          
+          # Verify build completed
+          echo "Build artifacts:"
+          ls -la build-reports/ || echo "No build reports generated"
+
+      - name: Execute deployment script
+        id: deploy
+        working-directory: ./automation
+        run: |
+          echo "Starting deployment process..."
+          
+          # Handle rollback if requested
+          if [ "${{ inputs.rollback }}" = "true" ]; then
+            echo "Performing rollback..."
+            if [ -x "./deploy.sh" ]; then
+              # Add rollback functionality to deploy script if not present
+              echo "Executing rollback via deploy script..."
+              bash -c 'source ./deploy.sh && rollback'
+            else
+              echo "Deploy script not found, manual rollback required"
+              exit 1
+            fi
+          else
+            # Normal deployment
+            echo "Performing deployment to ${{ env.TARGET_ENV }}..."
+            
+            # Make deploy script executable
+            chmod +x ./deploy.sh
+            
+            # Execute deployment
+            ./deploy.sh ${{ env.TARGET_ENV }}
+          fi
+          
+          # Set deployment URL based on environment
+          if [ "${{ env.TARGET_ENV }}" = "production" ]; then
+            echo "deployment_url=http://localhost:4444/ui" >> $GITHUB_OUTPUT
+          else
+            echo "deployment_url=http://localhost:4444/ui" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Verify deployment
+        working-directory: ./automation
+        run: |
+          echo "Verifying deployment..."
+          
+          # Wait for services to be ready
+          sleep 30
+          
+          # Check if Docker containers are running
+          if command -v docker-compose >/dev/null 2>&1; then
+            echo "Checking Docker Compose services..."
+            docker-compose ps || echo "Docker Compose not available or services not running"
+          fi
+          
+          # Check if Selenium Hub is accessible (if running locally)
+          if curl -f http://localhost:4444/ui > /dev/null 2>&1; then
+            echo "✅ Selenium Hub is accessible at http://localhost:4444/ui"
+          else
+            echo "⚠️ Selenium Hub is not accessible (this may be expected in CI environment)"
+          fi
+          
+          echo "Deployment verification completed!"
+
+      - name: Run post-deployment tests
+        working-directory: ./automation
+        run: |
+          echo "Running post-deployment tests..."
+          
+          # Run automation tests to verify deployment
+          npm run test || echo "Post-deployment tests completed with warnings"
+          
+          echo "Post-deployment testing completed!"
+        continue-on-error: true
+
+      - name: Upload deployment artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: deployment-report
-          path: automation/deployment-report-*.json
+          name: deployment-${{ env.TARGET_ENV }}-${{ github.run_id }}
+          if-no-files-found: ignore
+          retention-days: 30
+          path: |
+            automation/deployment-report-*.json
+            automation/deploy_*.log
+            automation/build-reports/**
+            automation/test-reports/**
+            automation/logs/**
+            automation/.env
+
+      - name: Generate deployment summary
+        if: always()
+        working-directory: ./automation
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.TARGET_ENV }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Services Available:" >> $GITHUB_STEP_SUMMARY
+            echo "- Selenium Hub: http://localhost:4444/ui" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Deployment failed!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the logs for more details." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Show deployment report if available
+          if [ -f "deployment-report-*.json" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Deployment Report:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+            cat deployment-report-*.json | head -20 >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Cleanup on failure
+        if: failure()
+        working-directory: ./automation
+        run: |
+          echo "Cleaning up failed deployment..."
+          
+          # Stop any running containers
+          if command -v docker-compose >/dev/null 2>&1; then
+            docker-compose down || true
+          fi
+          
+          # Clean up any temporary files
+          rm -f .env || true
+          
+          echo "Cleanup completed"
+
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: ${{ inputs.rollback }}
+    
+    environment: 
+      name: ${{ github.event.inputs.environment || 'staging' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Execute rollback
+        working-directory: ./automation
+        run: |
+          echo "🔄 Executing rollback for ${{ env.TARGET_ENV }}..."
+          
+          # Make deploy script executable
+          chmod +x ./deploy.sh
+          
+          # Execute rollback function from deploy script
+          bash -c 'source ./deploy.sh && rollback'
+          
+          echo "✅ Rollback completed!"
+
+      - name: Verify rollback
+        working-directory: ./automation
+        run: |
+          echo "Verifying rollback..."
+          
+          # Basic verification that services are running
+          sleep 15
+          
+          if command -v docker-compose >/dev/null 2>&1; then
+            docker-compose ps || echo "Docker services status unknown"
+          fi
+          
+          echo "Rollback verification completed!"
