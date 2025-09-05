@@ -1,4 +1,3 @@
-# .github/workflows/cd.yml
 name: Continuous Deployment
 
 on:
@@ -7,32 +6,51 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Target environment'
+        description: Target environment
         required: true
-        default: 'staging'
+        default: staging
         type: choice
-        options:
-          - staging
-          - production
+        options: [ staging, production ]
 
 jobs:
   deploy:
-    name: Deploy Application
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Run Deployment Script
-        working-directory: ./automation
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Docker version
         run: |
-          chmod +x deploy.sh
-          ./deploy.sh ${{ github.event.inputs.environment || 'staging' }}
-      
-      - name: Upload Deployment Report
+          docker --version
+          docker compose version || true
+
+      - name: Make deploy script executable
+        run: chmod +x automation/deploy.sh
+
+      # If deploy.sh uses "docker-compose", the runner might not have v1.
+      # Prefer "docker compose" inside the script. Otherwise install docker-compose v1
+      # or adapt deploy.sh to pick whichever is available.
+
+      - name: Run deployment
+        env:
+          # default to 'staging' when triggered by push (no inputs)
+          TARGET_ENV: ${{ inputs.environment || 'staging' }}
+        run: |
+          cd automation
+          ./deploy.sh "$TARGET_ENV"
+
+      - name: Upload deployment report & logs
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: deployment-report
-          path: automation/deployment-report-*.json
+          name: deployment-${{ github.run_id }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            automation/deployment-report-*.json
+            automation/deploy_*.log
+            deployment-report-*.json
+            deploy_*.log
