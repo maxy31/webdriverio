@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" failures="0" errors="0" skipped="0">
+  <testsuite name="My Login application" timestamp="2025-09-06T13:50:36" time="7.569" tests="1" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="My Login application"/>
+      <property name="capabilities" value="microsoftedge.139_0_3405_125.windows"/>
+      <property name="file" value="file:///C:/Users/User/Documents/GitHub/webdriverio/my-wdio-tests/test/specs/test.e2e.ts"/>
+    </properties>
+    <testcase classname="microsoftedge.139_0_3405_125.windows.My_Login_application" name="should login with valid credentials" time="7.566">
+      <system-out><![CDATA[
+COMMAND: POST /session/e897d06277b84004e89d1166c87c4fa3/element/f.24C71DDD136B8D256C1AE2BC50786DD5.d.1F3D6090C3DF11753AEE5A8F72279182.e.4/clear - {}
+RESULT: {}
+COMMAND: POST /session/e897d06277b84004e89d1166c87c4fa3/element/f.24C71DDD136B8D256C1AE2BC50786DD5.d.1F3D6090C3DF11753AEE5A8F72279182.e.4/value - {"text":"tomsmith"}
+RESULT: {"text":"tomsmith"}
+COMMAND: POST /session/e897d06277b84004e89d1166c87c4fa3/element/f.24C71DDD136B8D256C1AE2BC50786DD5.d.1F3D6090C3DF11753AEE5A8F72279182.e.5/clear - {}
+RESULT: {}
+COMMAND: POST /session/e897d06277b84004e89d1166c87c4fa3/element/f.24C71DDD136B8D256C1AE2BC50786DD5.d.1F3D6090C3DF11753AEE5A8F72279182.e.5/value - {"text":"SuperSecretPassword!"}
+RESULT: {"text":"SuperSecretPassword!"}
+COMMAND: POST /session/e897d06277b84004e89d1166c87c4fa3/element/f.24C71DDD136B8D256C1AE2BC50786DD5.d.1F3D6090C3DF11753AEE5A8F72279182.e.6/click - {}
+RESULT: {}
+COMMAND: GET /session/e897d06277b84004e89d1166c87c4fa3/element/f.24C71DDD136B8D256C1AE2BC50786DD5.d.8AB72C003734E81EE76DC9E71ABBF786.e.14/text - {}
+RESULT: {}
+COMMAND: DELETE /session/e897d06277b84004e89d1166c87c4fa3 - {}
+RESULT: {}
+]]></system-out>
+    </testcase>
+  </testsuite>
+</testsuites>
