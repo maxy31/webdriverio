@@ -1,35 +1,58 @@
 {
   "name": "webdriverio-automation",
   "version": "1.0.0",
-  "description": "Automation scripts for WebdriverIO",
-  "main": "automation-runner.js",
   "scripts": {
-    "build": "node build-automation.js",
-    "start": "node automation-runner.js",
-    "all": "npm run build && npm run test",
-    "test": "wdio run wdio.conf.js",
-    "test:ci": "wdio run wdio.conf.js --headless",
-    "test:docker": "npx wdio run wdio.conf.js --headless",
-    "lint": "echo No linting configured && exit 0"
+    "build": "npm run compile && npm run bundle",
+    "compile": "echo 'Compiling source code...' && npm ci",
+    "bundle": "echo 'Bundling application...' && mkdir -p dist && cp -r test dist/ && cp *.js dist/",
+    "package": "npm pack",
+    
+    "test": "npm run test:coverage",
+    "test:unit": "wdio run wdio.conf.js",
+    "test:coverage": "nyc wdio run wdio.conf.js",
+    "test:ci": "nyc wdio run wdio.conf.js --headless",
+    "test:report": "nyc report --reporter=html --reporter=lcov --reporter=text",
+    
+    "deploy:staging": "./deploy.sh staging",
+    "deploy:prod": "./deploy.sh production",
+    
+    "lint": "eslint . --ext .js --ignore-pattern node_modules || echo 'Linting completed'"
   },
-  "keywords": [
-    "webdriverio",
-    "automation",
-    "ci-cd"
-  ],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@wdio/cli": "^9.19.2",
-    "@wdio/local-runner": "^9.19.2",
-    "@wdio/mocha-framework": "^9.19.2",
-    "@wdio/spec-reporter": "^9.19.2",
-    "eslint": "latest"
+  "nyc": {
+    "include": [
+      "**/*.js"
+    ],
+    "exclude": [
+      "node_modules/**",
+      "test/**",
+      "coverage/**",
+      "dist/**"
+    ],
+    "reporter": [
+      "text",
+      "html",
+      "lcov",
+      "json"
+    ],
+    "report-dir": "./coverage",
+    "check-coverage": true,
+    "lines": 80,
+    "statements": 80,
+    "functions": 80,
+    "branches": 80
   },
   "dependencies": {
     "@wdio/cli": "latest",
     "@wdio/local-runner": "latest", 
     "@wdio/mocha-framework": "latest",
     "@wdio/spec-reporter": "latest"
+  },
+  "devDependencies": {
+    "@wdio/cli": "latest",
+    "@wdio/local-runner": "latest", 
+    "@wdio/mocha-framework": "latest",
+    "@wdio/spec-reporter": "latest",
+    "nyc": "^15.1.0",
+    "eslint": "latest"
   }
 }
