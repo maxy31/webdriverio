@@ -1,12 +1,8 @@
-// build-automation.js
-// Simplified Build automation script for WebdriverIO project
-// This version works independently of the main project dependencies
-
-const { exec } = require('child_process');
+// build-automation.js - Real WebdriverIO build automation
+const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Colors for console output
 const colors = {
     reset: '\x1b[0m',
     green: '\x1b[32m',
@@ -15,319 +11,201 @@ const colors = {
     blue: '\x1b[34m'
 };
 
-// Build configuration
 const buildConfig = {
     projectName: 'WebdriverIO',
     outputDir: 'dist',
-    reportDir: 'build-reports'
+    reportDir: 'build-reports',
+    nodeVersion: '18'
 };
 
-// Function to execute shell commands
 function executeCommand(command, description) {
-    return new Promise((resolve, reject) => {
-        console.log(`${colors.blue}[BUILD] ${description}...${colors.reset}`);
-        
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`${colors.yellow}[WARN] ${error.message}${colors.reset}`);
-                // Don't reject, just warn and continue
-                resolve({ error: true, message: error.message });
-                return;
-            }
-            if (stderr && !stderr.includes('npm notice')) {
-                console.log(`${colors.yellow}[INFO] ${stderr}${colors.reset}`);
-            }
-            console.log(stdout);
-            console.log(`${colors.green}[SUCCESS] ${description} completed!${colors.reset}`);
-            resolve({ error: false, stdout });
+    console.log(`${colors.blue}[BUILD] ${description}...${colors.reset}`);
+    try {
+        const output = execSync(command, { 
+            stdio: 'inherit',
+            encoding: 'utf8',
+            timeout: 300000 // 5 minutes timeout
         });
-    });
+        console.log(`${colors.green}[SUCCESS] ${description} completed!${colors.reset}`);
+        return { success: true, output };
+    } catch (error) {
+        console.error(`${colors.red}[ERROR] ${description} failed: ${error.message}${colors.reset}`);
+        return { success: false, error: error.message };
+    }
 }
 
-// Main build process
 async function build() {
-    console.log(`${colors.blue}========================================${colors.reset}`);
-    console.log(`${colors.blue}     WebdriverIO Build Automation      ${colors.reset}`);
-    console.log(`${colors.blue}========================================${colors.reset}`);
-    
     const startTime = Date.now();
     const buildSteps = [];
     
     try {
-        // Step 1: Clean previous builds
-        console.log(`\n${colors.yellow}Step 1: Cleaning previous builds${colors.reset}`);
+        console.log(`${colors.blue}========================================${colors.reset}`);
+        console.log(`${colors.blue}     WebdriverIO CI Build Process      ${colors.reset}`);
+        console.log(`${colors.blue}========================================${colors.reset}`);
+        
+        // Step 1: Environment validation
+        console.log(`\n${colors.yellow}Step 1: Environment validation${colors.reset}`);
+        const nodeCheck = executeCommand('node --version', 'Node.js version check');
+        const npmCheck = executeCommand('npm --version', 'NPM version check');
+        
+        if (!nodeCheck.success || !npmCheck.success) {
+            throw new Error('Environment validation failed');
+        }
+        buildSteps.push('Environment validated');
+        
+        // Step 2: Clean previous builds
+        console.log(`\n${colors.yellow}Step 2: Cleaning previous builds${colors.reset}`);
         if (fs.existsSync(buildConfig.outputDir)) {
             fs.rmSync(buildConfig.outputDir, { recursive: true });
         }
-        if (!fs.existsSync(buildConfig.reportDir)) {
-            fs.mkdirSync(buildConfig.reportDir, { recursive: true });
-        }
+        fs.mkdirSync(buildConfig.outputDir, { recursive: true });
+        fs.mkdirSync(buildConfig.reportDir, { recursive: true });
         buildSteps.push('Previous builds cleaned');
         
-        // Step 2: Check Node.js version
-        console.log(`\n${colors.yellow}Step 2: Checking environment${colors.reset}`);
-        const nodeVersion = process.version;
-        console.log(`Node.js version: ${nodeVersion}`);
-        console.log(`Platform: ${process.platform}`);
-        buildSteps.push(`Environment checked (Node ${nodeVersion})`);
-        
-        // Step 3: Create dist directory
-        console.log(`\n${colors.yellow}Step 3: Creating build directories${colors.reset}`);
-        if (!fs.existsSync(buildConfig.outputDir)) {
-            fs.mkdirSync(buildConfig.outputDir, { recursive: true });
+        // Step 3: Install dependencies
+        console.log(`\n${colors.yellow}Step 3: Installing dependencies${colors.reset}`);
+        const installResult = executeCommand('npm ci', 'NPM dependency installation');
+        if (!installResult.success) {
+            throw new Error('Dependency installation failed');
         }
-        buildSteps.push('Build directories created');
+        buildSteps.push('Dependencies installed');
         
-        // Step 4: Simulate compilation (copy important files)
-        console.log(`\n${colors.yellow}Step 4: Compiling source code${colors.reset}`);
+        // Step 4: Security audit
+        console.log(`\n${colors.yellow}Step 4: Security vulnerability scan${colors.reset}`);
+        const auditResult = executeCommand('npm audit --audit-level=moderate', 'Security audit');
+        if (!auditResult.success) {
+            console.log(`${colors.yellow}[WARN] Security vulnerabilities found${colors.reset}`);
+        }
+        buildSteps.push('Security audit completed');
         
-        // List source files (simulation)
-        const sourceFiles = [
-            '../packages',
-            '../scripts',
-            '../LICENSE',
-            '../README.md'
-        ];
+        // Step 5: Code linting
+        console.log(`\n${colors.yellow}Step 5: Code quality checks${colors.reset}`);
+        const lintResult = executeCommand('npm run lint', 'ESLint code quality check');
+        if (!lintResult.success) {
+            throw new Error('Code quality checks failed');
+        }
+        buildSteps.push('Code quality checks passed');
         
-        let compiledFiles = 0;
-        for (const file of sourceFiles) {
+        // Step 6: Build WebdriverIO configuration
+        console.log(`\n${colors.yellow}Step 6: Validating WebdriverIO configuration${colors.reset}`);
+        if (!fs.existsSync('wdio.conf.js')) {
+            console.log(`${colors.yellow}[WARN] wdio.conf.js not found, creating default${colors.reset}`);
+            createDefaultWdioConfig();
+        }
+        buildSteps.push('WebdriverIO configuration validated');
+        
+        // Step 7: Compile/Bundle (if applicable)
+        console.log(`\n${colors.yellow}Step 7: Compiling source code${colors.reset}`);
+        // Copy necessary files to dist
+        const filesToCopy = ['package.json', 'wdio.conf.js', 'test/', 'src/'];
+        filesToCopy.forEach(file => {
             if (fs.existsSync(file)) {
-                console.log(`  Compiling: ${file}`);
-                compiledFiles++;
+                const destPath = path.join(buildConfig.outputDir, file);
+                if (fs.statSync(file).isDirectory()) {
+                    fs.cpSync(file, destPath, { recursive: true });
+                } else {
+                    fs.copyFileSync(file, destPath);
+                }
             }
-        }
-        console.log(`${colors.green}Compiled ${compiledFiles} source modules${colors.reset}`);
-        buildSteps.push(`Source code compiled (${compiledFiles} modules)`);
+        });
+        buildSteps.push('Source code compiled');
         
-        // Step 5: Run basic checks
-        console.log(`\n${colors.yellow}Step 5: Running build validation${colors.reset}`);
-        
-        // Check if package.json exists
-        if (fs.existsSync('../package.json')) {
-            const packageJson = JSON.parse(fs.readFileSync('../package.json', 'utf8'));
-            console.log(`  Project: ${packageJson.name || 'webdriverio'}`);
-            console.log(`  Version: ${packageJson.version || '1.0.0'}`);
-            buildSteps.push('Build validation passed');
-        }
-        
-        // Step 6: Create build artifacts
-        console.log(`\n${colors.yellow}Step 6: Creating build artifacts${colors.reset}`);
-        
-        // Create a simple manifest file
+        // Step 8: Generate build manifest
+        console.log(`\n${colors.yellow}Step 8: Creating build artifacts${colors.reset}`);
+        const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
         const manifest = {
-            name: 'WebdriverIO Build',
+            name: packageJson.name || 'webdriverio-automation',
+            version: packageJson.version || '1.0.0',
+            buildId: `build-${Date.now()}`,
             timestamp: new Date().toISOString(),
-            version: '1.0.0',
-            modules: compiledFiles,
-            platform: process.platform,
-            node: process.version
+            nodeVersion: process.version,
+            npmVersion: execSync('npm --version', { encoding: 'utf8' }).trim(),
+            gitHash: getGitHash(),
+            environment: process.env.NODE_ENV || 'development',
+            buildSteps: buildSteps
         };
         
         fs.writeFileSync(
-            path.join(buildConfig.outputDir, 'manifest.json'),
+            path.join(buildConfig.outputDir, 'build-manifest.json'),
             JSON.stringify(manifest, null, 2)
         );
-        console.log(`${colors.green}Build manifest created${colors.reset}`);
         buildSteps.push('Build artifacts created');
         
-        // Step 7: Package simulation
-        console.log(`\n${colors.yellow}Step 7: Packaging application${colors.reset}`);
-        
-        // Create a tarball (simulation)
-        const tarballName = `webdriverio-build-${Date.now()}.tar.gz`;
-        fs.writeFileSync(
-            path.join(buildConfig.outputDir, tarballName),
-            'Binary package content (simulated)'
-        );
-        console.log(`${colors.green}Package created: ${tarballName}${colors.reset}`);
-        buildSteps.push(`Application packaged as ${tarballName}`);
-        
-        // Step 8: Generate build report
-        console.log(`\n${colors.yellow}Step 8: Generating build report${colors.reset}`);
+        // Generate build report
         const endTime = Date.now();
         const buildTime = (endTime - startTime) / 1000;
         
         const buildReport = {
-            project: buildConfig.projectName,
             status: 'SUCCESS',
-            timestamp: new Date().toISOString(),
-            buildTime: `${buildTime} seconds`,
-            environment: {
-                nodeVersion: process.version,
-                npmVersion: 'N/A',
-                platform: process.platform,
-                arch: process.arch,
-                cpus: require('os').cpus().length
-            },
-            steps: buildSteps,
-            artifacts: [
-                {
-                    name: 'manifest.json',
-                    path: path.join(buildConfig.outputDir, 'manifest.json'),
-                    size: fs.statSync(path.join(buildConfig.outputDir, 'manifest.json')).size
-                },
-                {
-                    name: tarballName,
-                    path: path.join(buildConfig.outputDir, tarballName),
-                    size: fs.statSync(path.join(buildConfig.outputDir, tarballName)).size
-                }
-            ],
-            summary: {
-                totalSteps: buildSteps.length,
-                successfulSteps: buildSteps.length,
-                failedSteps: 0,
-                warnings: 0
-            }
+            buildTime: `${buildTime}s`,
+            manifest: manifest,
+            steps: buildSteps
         };
         
-        // Write JSON report
         fs.writeFileSync(
             path.join(buildConfig.reportDir, 'build-report.json'),
             JSON.stringify(buildReport, null, 2)
         );
         
-        // Write HTML report
-        const htmlReport = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Build Report - ${buildConfig.projectName}</title>
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 20px; }
-        h1 { margin: 0; font-size: 2em; }
-        .status { display: inline-block; background: #10b981; padding: 5px 15px; border-radius: 20px; margin-top: 10px; }
-        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .metric { display: inline-block; margin: 10px 20px 10px 0; }
-        .metric-value { font-size: 2em; font-weight: bold; color: #4f46e5; }
-        .metric-label { color: #6b7280; font-size: 0.9em; }
-        .step-list { list-style: none; padding: 0; }
-        .step-list li { padding: 10px; margin: 5px 0; background: #f9fafb; border-left: 4px solid #10b981; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f3f4f6; padding: 12px; text-align: left; font-weight: 600; }
-        td { padding: 12px; border-bottom: 1px solid #e5e7eb; }
-        .footer { text-align: center; color: #6b7280; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📦 Build Report</h1>
-            <div>Project: ${buildReport.project}</div>
-            <div class="status">✅ ${buildReport.status}</div>
-        </div>
-        
-        <div class="card">
-            <h2>Build Metrics</h2>
-            <div class="metric">
-                <div class="metric-value">${buildReport.buildTime}</div>
-                <div class="metric-label">Build Time</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value">${buildReport.summary.totalSteps}</div>
-                <div class="metric-label">Total Steps</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value">${buildReport.summary.successfulSteps}</div>
-                <div class="metric-label">Successful</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value">${buildReport.artifacts.length}</div>
-                <div class="metric-label">Artifacts</div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <h2>Build Steps</h2>
-            <ul class="step-list">
-                ${buildReport.steps.map(step => `<li>✓ ${step}</li>`).join('')}
-            </ul>
-        </div>
-        
-        <div class="card">
-            <h2>Build Artifacts</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Artifact</th>
-                        <th>Path</th>
-                        <th>Size</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${buildReport.artifacts.map(artifact => `
-                        <tr>
-                            <td>${artifact.name}</td>
-                            <td>${artifact.path}</td>
-                            <td>${artifact.size} bytes</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="card">
-            <h2>Environment</h2>
-            <table>
-                <tbody>
-                    <tr><td><strong>Node Version</strong></td><td>${buildReport.environment.nodeVersion}</td></tr>
-                    <tr><td><strong>Platform</strong></td><td>${buildReport.environment.platform}</td></tr>
-                    <tr><td><strong>Architecture</strong></td><td>${buildReport.environment.arch}</td></tr>
-                    <tr><td><strong>CPU Cores</strong></td><td>${buildReport.environment.cpus}</td></tr>
-                    <tr><td><strong>Timestamp</strong></td><td>${new Date(buildReport.timestamp).toLocaleString()}</td></tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="footer">
-            Generated on ${new Date().toLocaleString()} | WebdriverIO Build Automation
-        </div>
-    </div>
-</body>
-</html>`;
-        
-        fs.writeFileSync(
-            path.join(buildConfig.reportDir, 'build-report.html'),
-            htmlReport
-        );
-        
         console.log(`\n${colors.green}========================================${colors.reset}`);
-        console.log(`${colors.green}    BUILD COMPLETED SUCCESSFULLY!      ${colors.reset}`);
+        console.log(`${colors.green}    CI BUILD COMPLETED SUCCESSFULLY!   ${colors.reset}`);
         console.log(`${colors.green}========================================${colors.reset}`);
-        console.log(`${colors.blue}Summary:${colors.reset}`);
-        console.log(`  • Build Time: ${buildTime} seconds`);
-        console.log(`  • Steps Completed: ${buildSteps.length}/${buildSteps.length}`);
-        console.log(`  • Artifacts Generated: ${buildReport.artifacts.length}`);
-        console.log(`\n${colors.blue}Reports:${colors.reset}`);
-        console.log(`  • JSON: ${path.join(buildConfig.reportDir, 'build-report.json')}`);
-        console.log(`  • HTML: ${path.join(buildConfig.reportDir, 'build-report.html')}`);
+        console.log(`Build ID: ${manifest.buildId}`);
+        console.log(`Build Time: ${buildTime}s`);
+        console.log(`Artifacts: ${buildConfig.outputDir}/`);
+        
+        process.exit(0);
         
     } catch (error) {
-        console.error(`\n${colors.red}========================================${colors.reset}`);
-        console.error(`${colors.red}         BUILD FAILED!                 ${colors.reset}`);
-        console.error(`${colors.red}========================================${colors.reset}`);
-        console.error(`${colors.red}Error: ${error.message}${colors.reset}`);
-        
-        // Generate error report
         const errorReport = {
-            project: buildConfig.projectName,
             status: 'FAILED',
-            timestamp: new Date().toISOString(),
             error: error.message,
-            stack: error.stack,
+            timestamp: new Date().toISOString(),
             steps: buildSteps
         };
         
         fs.writeFileSync(
-            path.join(buildConfig.reportDir, 'build-error-report.json'),
+            path.join(buildConfig.reportDir, 'build-error.json'),
             JSON.stringify(errorReport, null, 2)
         );
         
+        console.error(`\n${colors.red}========================================${colors.reset}`);
+        console.error(`${colors.red}         CI BUILD FAILED!              ${colors.reset}`);
+        console.error(`${colors.red}========================================${colors.reset}`);
+        console.error(`Error: ${error.message}`);
         process.exit(1);
     }
 }
 
-// Run the build
-console.log('Starting WebdriverIO Build Automation...\n');
+function getGitHash() {
+    try {
+        return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    } catch {
+        return 'unknown';
+    }
+}
+
+function createDefaultWdioConfig() {
+    const defaultConfig = `exports.config = {
+    runner: 'local',
+    specs: ['./test/specs/**/*.js'],
+    maxInstances: 10,
+    capabilities: [{
+        browserName: 'chrome',
+        'goog:chromeOptions': {
+            args: ['--headless', '--disable-gpu', '--no-sandbox']
+        }
+    }],
+    logLevel: 'info',
+    framework: 'mocha',
+    reporters: ['spec'],
+    mochaOpts: {
+        ui: 'bdd',
+        timeout: 60000
+    }
+};`;
+    
+    fs.writeFileSync('wdio.conf.js', defaultConfig);
+}
+
 build();

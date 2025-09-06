@@ -1,8 +1,0 @@
-{
-  "name": "WebdriverIO Build",
-  "timestamp": "2025-09-05T11:45:34.656Z",
-  "version": "1.0.0",
-  "modules": 4,
-  "platform": "win32",
-  "node": "v18.20.8"
-}

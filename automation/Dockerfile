@@ -1,18 +1,37 @@
-# Dockerfile - Shows all automation in logs
+# Dockerfile for WebdriverIO automation
 FROM node:18-alpine
 
+# Install Chrome dependencies
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Set Chrome environment variables
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Create app directory
 WORKDIR /app
 
-# Copy all files
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
 COPY . .
 
-# Create directories
-RUN mkdir -p build-reports test-reports logs
+# Create directories for reports
+RUN mkdir -p test-reports coverage allure-results
 
-# Don't run scripts during build, run them at runtime
-# This way they show in docker logs
+# Expose port for reports
+EXPOSE 3000
 
-EXPOSE 4444
-
-# Run the automation runner which shows everything
-CMD ["npm", "start"]
+# Default command
+CMD ["npm", "test"]

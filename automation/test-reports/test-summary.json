@@ -1,0 +1,9 @@
+{
+  "status": "COMPLETED",
+  "timestamp": "2025-09-05T23:54:23.060Z",
+  "executionTime": "319.322s",
+  "reportsGenerated": {
+    "allure": false,
+    "coverage": true
+  }
+}

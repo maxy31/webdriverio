@@ -5,10 +5,9 @@
   "main": "automation-runner.js",
   "scripts": {
     "build": "node build-automation.js",
+    "test": "node test-automation.js",
     "start": "node automation-runner.js",
     "all": "npm run build && npm run test",
-    "test": "wdio run wdio.conf.js",
-    "test:ci": "wdio run wdio.conf.js --headless",
     "lint": "echo No linting configured && exit 0"
   },
   "keywords": [
@@ -19,7 +18,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@wdio/cli": "^9.19.2",
     "eslint": "^9.35.0"
   }
 }
