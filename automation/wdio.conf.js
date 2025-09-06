@@ -1,26 +1,31 @@
-// wdio.conf.js
+// wdio.conf.js - Clean version with no services
 exports.config = {
     runner: 'local',
+    
     specs: [
         './test/specs/**/*.js'
     ],
-    exclude: [],
-    maxInstances: 10,
     
-    // Use Selenium Grid when in Docker, local otherwise
-    hostname: process.env.SELENIUM_HUB_URL ? 'selenium-hub' : 'localhost',
-    port: process.env.SELENIUM_HUB_URL ? 4444 : undefined,
-    path: process.env.SELENIUM_HUB_URL ? '/wd/hub' : undefined,
+    exclude: [],
+    
+    maxInstances: 10,
     
     capabilities: [{
         browserName: 'chrome',
         'goog:chromeOptions': {
-            args: process.env.CI === 'true' ? [
+            // Use Chrome's binary directly
+            binary: process.platform === 'win32' 
+                ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+                : '/usr/bin/google-chrome',
+            args: [
                 '--headless',
-                '--no-sandbox', 
+                '--no-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu'
-            ] : []
+                '--disable-gpu',
+                '--disable-extensions',
+                '--disable-web-security',
+                '--remote-debugging-port=9222'
+            ]
         }
     }],
     
@@ -31,11 +36,12 @@ exports.config = {
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
     
-    // Use chromedriver service only when not using Selenium Grid
-    services: process.env.SELENIUM_HUB_URL ? [] : ['chromedriver'],
+    // IMPORTANT: Empty services array - no chromedriver service!
+    services: [],
     
     framework: 'mocha',
     reporters: ['spec'],
+    
     mochaOpts: {
         ui: 'bdd',
         timeout: 60000
