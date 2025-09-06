@@ -1,4 +1,4 @@
-# Dockerfile for WebdriverIO automation
+# Dockerfile for WebdriverIO automation testing 123
 FROM node:18-alpine
 
 # Install Chrome dependencies
