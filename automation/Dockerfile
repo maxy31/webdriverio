@@ -21,8 +21,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install ALL dependencies (including devDependencies for WebdriverIO CLI)
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -33,5 +33,5 @@ RUN mkdir -p test-reports coverage allure-results
 # Expose port for reports
 EXPOSE 3000
 
-# Default command
-CMD ["npm", "test"]
+# Default command - use npx to ensure wdio is found
+CMD ["npx", "wdio", "run", "wdio.conf.js"]

@@ -9,6 +9,7 @@
     "all": "npm run build && npm run test",
     "test": "wdio run wdio.conf.js",
     "test:ci": "wdio run wdio.conf.js --headless",
+    "test:docker": "npx wdio run wdio.conf.js --headless",
     "lint": "echo No linting configured && exit 0"
   },
   "keywords": [
@@ -24,5 +25,11 @@
     "@wdio/mocha-framework": "^9.19.2",
     "@wdio/spec-reporter": "^9.19.2",
     "eslint": "latest"
+  },
+  "dependencies": {
+    "@wdio/cli": "latest",
+    "@wdio/local-runner": "latest", 
+    "@wdio/mocha-framework": "latest",
+    "@wdio/spec-reporter": "latest"
   }
 }
